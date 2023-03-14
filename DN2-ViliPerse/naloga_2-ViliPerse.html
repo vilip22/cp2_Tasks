@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Draw</title>
+        <meta charset="UTF-8">
+        <style>
+            #canvas {
+                display: inline-block;
+                box-sizing: border-box;
+                border: 1px solid black;
+            }
+            #stickers {
+                display: inline-block;
+                width: 50px;
+                height: 50px;
+            }
+            .sticker {
+                display: inline-block;
+                box-sizing: border-box;
+                width: 50px;
+                margin: 2px;
+            }
+            .color {
+                display: inline-block;
+                box-sizing: border-box;
+                width: 48px;
+                height: 30px;
+                border: 1px solid black;
+                margin: 2px 1px 0px 1px;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas" width="800" height="600" ondragover="itemDragOver(event)" ondrop="stickerDrop(event)"></canvas>
+        <div id="stickers">
+            <img id="sticker0" class="sticker" src="http://clipart-library.com/data_images/487831.png" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker1" class="sticker" src="http://clipart-library.com/data_images/487787.png" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker2" class="sticker" src="http://clipart-library.com/data_images/487743.png" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker3" class="sticker" src="http://clipart-library.com/data_images/487741.png" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker4" class="sticker" src="http://clipart-library.com/data_images/487815.png" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker5" class="sticker" src="http://clipart-library.com/data_images/402767.png" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker6" class="sticker" src="http://clipart-library.com/data_images/363964.gif" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker7" class="sticker" src="http://clipart-library.com/data_images/487785.png" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker8" class="sticker" src="http://clipart-library.com/data_images/487810.jpg" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker9" class="sticker" src="http://clipart-library.com/image_gallery/464509.png" draggable="true" ondragstart="itemDragStart(event)">
+            <img id="sticker10" class="sticker" src="http://clipart-library.com/image_gallery/464541.jpg" draggable="true" ondragstart="itemDragStart(event)">
+        </div>
+        <div>
+        <script>
+            var colorNames = ["black", "gray", "silver", "white", "maroon", "red", "olive", "yellow", "green",
+                "lime", "teal", "aqua", "navy", "blue", "purple", "fuchsia"];
+
+            var color = 0;
+
+            var tool = "pen";
+
+            function setColor(i) {
+                document.getElementById(color).style.border = "none";
+                color = i;
+                document.getElementById(i).style.border = "thick solid #000000";
+            }
+
+            for (var i = 0; i < 16; i++) {
+                document.write(`<div id=${i} class="color" style="background-color: ${colorNames[i]}" onclick="setColor(${i})"></div>`);
+            }
+
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("2d");
+            let coord = { x: 0, y: 0 };
+
+            document.addEventListener("mousedown", start);
+            document.addEventListener("mouseup", stop);
+
+            function start(event) {
+                document.addEventListener("mousemove", draw);
+                reposition(event);
+            }
+
+            function reposition(event) {
+                coord.x = event.clientX - canvas.offsetLeft;
+                coord.y = event.clientY - canvas.offsetTop;
+            }
+
+            function stop() {
+                document.removeEventListener("mousemove", draw);
+            }
+
+            function draw(event) {
+                if (tool != "pen") return;
+                ctx.beginPath();
+                ctx.lineWidth = 5;
+                ctx.lineCap = "round";
+                ctx.strokeStyle = colorNames[color];
+                ctx.moveTo(coord.x, coord.y);
+                reposition(event);
+                ctx.lineTo(coord.x, coord.y);
+                ctx.stroke();
+            }
+
+            function itemDragStart(event) {
+                tool = "sticker";
+                event.dataTransfer.setData("id", event.target.id);
+            }
+
+            function itemDragOver(event) {
+                reposition(event);
+                event.preventDefault();
+            }
+
+            function stickerDrop(event) {
+                reposition(event);
+                var imgID = event.dataTransfer.getData("id");
+                var img = document.getElementById(imgID);
+                ctx.drawImage(img, coord.x-25, coord.y-25, 100, 100);
+                event.preventDefault();
+                tool = "pen";
+                stop();
+            }
+
+        </script>
+        </div>
+    </body>
+</html>
