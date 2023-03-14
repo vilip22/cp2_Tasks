@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Minesweeper</title>
+        <link rel="shortcut icon" href="flag.png">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <script src="minefield.js"></script>
+    </head>
+    <body>
+        <div id="mine-counter"></div>
+        <button id="new-game-button" type="button" onclick="new_game();">New Game</button><br>
+        <div id="menu">
+            Rows: <input type="number" id="rows-input" value = "10" min="4" max="24">
+            Columns: <input type="number" id="cols-input" value = "10" min="4" max="24">
+            Mines: <input type="number" id="mines-input" value = "10" min="1" max="575">
+        </div>
+        <div id="timer">0</div>
+        <div id="game-field"></div>
+        <div id="game-output"></div>
+    </body>
+    <script>
+
+        var minefield;
+        var mine_counter = document.getElementById("mine-counter");
+        var menu = document.getElementById("menu");
+        var rows_input = document.getElementById("rows-input");
+        var cols_input = document.getElementById("cols-input");
+        var mines_input = document.getElementById("mines-input");
+        var rows;
+        var cols;
+        var mines;
+        var timer = document.getElementById("timer");
+        var seconds = 0;
+        var increment;
+        var game_field = document.getElementById("game-field");
+        var game_output = document.getElementById("game-output");
+        var flaged;
+        var nof_flags
+
+        new_game();
+
+        function new_game() {
+            rows = rows_input.value;
+            if (rows > 24) rows = 24;
+            if (rows < 4) rows = 4;
+            rows_input.value = rows;
+            cols = cols_input.value;
+            if (cols > 24) cols = 24;
+            if (rows < 4) rows = 4;
+            cols_input.value = cols;
+            mines = mines_input.value;
+            if (mines < 1) mines = 1;
+            if (mines > rows*cols-1) mines = rows*cols-1;
+            mines_input.value = mines;
+
+            mine_counter.innerHTML = mines;
+            nof_flags = mines;
+
+            seconds = 0;
+            clearInterval(incrementSeconds, 1000);
+            increment = setInterval(incrementSeconds, 1000);
+
+            game_output.innerHTML = "";
+
+            flaged = new Array(rows);
+            for (var i = 0; i < rows; i++) {
+                flaged[i] = new Array(cols);
+            }
+            for (var y = 0; y < rows; y++) {
+                for (var x = 0; x < cols; x++) {
+                    flaged[y][x] = false;
+                }
+            }
+            
+            minefield = new Minefield(rows, cols, mines);
+
+            game_field.innerHTML = "";
+            for (var y = 0; y < rows; y++) {
+                for (var x = 0; x < cols; x++) {
+                    game_field.innerHTML += 
+                        "<input type=\"button\" id=\"" + x + "." + y + "\" " +
+                        "onclick=\"hit(" + x + "," + y + ");\"" +
+                        "style=\"width: 25px; height: 25px; vertical-align: top;\"" +
+                        "oncontextmenu=\"flag(" + x + "," + y + ");return false;\"></input>";
+                }
+                game_field.innerHTML += "<br>";
+            }
+        }
+
+        function hit(x0, y0) {
+            if (flaged[y0][x0]) return;
+            minefield.unveil(x0, y0);
+            for (var y = 0; y < rows; y++) {
+                for (var x = 0; x < cols; x++) {
+                    var target = document.getElementById(x + "." + y);
+                    if (minefield.symbol(x, y) == 'x') { 
+                        defeat();
+                        target.style.backgroundColor = "red";
+                        return;
+                    }
+                    else if (minefield.symbol(x, y) == '.') target.value = "";
+                    else if (minefield.symbol(x, y) == '0') {
+                        target.value = "";
+                        target.disabled = 'disabled';
+                        if (flaged[y][x]) flag(x, y);
+                        target.style.border = "none";
+                        target.style.backgroundColor = "#eeeeee";
+                    } else {
+                        target.value = minefield.symbol(x, y);
+                        target.disabled = 'disabled';
+                        if (flaged[y][x]) flag(x, y);
+                        switch (minefield.symbol(x, y)) {
+                            case '1': target.style.color = "blue"; break;
+                            case '2': target.style.color = "green"; break;
+                            case '3': target.style.color = "red"; break;
+                            case '4': target.style.color = "navy"; break;
+                            case '5': target.style.color = "maroon"; break;
+                            case '6': target.style.color = "lightseagreen"; break;
+                            case '7': target.style.color = "black"; break;
+                            case '8': target.style.color = "gray"; break;
+                        }
+                        target.style.border = "none";
+                        target.style.backgroundColor = "#eeeeee";
+                    }
+                }
+            }
+            if (minefield.veiled == mines) victory();
+        }
+
+        function flag(x, y) {
+            var target = document.getElementById(x + "." + y);
+            if (!flaged[y][x]) {
+                target.style.backgroundImage = "url('flag.png')";
+                target.style.backgroundSize = "50% 50%";
+                target.style.backgroundRepeat = "no-repeat";
+                target.style.backgroundPosition = "center";
+                target.style.border = "1px solid gray";
+                flaged[y][x] = true;
+                nof_flags--;
+                mine_counter.innerHTML = nof_flags;
+            } else {
+                target.style.backgroundImage = "none";
+                target.style.border = "1px solid gray";
+                flaged[y][x] = false;
+                nof_flags++;
+                mine_counter.innerHTML = nof_flags;
+            }
+        }
+
+        function unveil_all() {
+            for (var y = 0; y < rows; y++) {
+                for (var x = 0; x < cols; x++) {
+                    if (flaged[y][x]) flag(x, y);
+                    var target = document.getElementById(x + "." + y);
+                    minefield.unveil(x, y);
+                    if (minefield.symbol(x, y) == 'x') {
+                        target.style.backgroundImage = "url('mine.png')";
+                        target.style.backgroundSize = "cover";
+                    }
+                    else if (minefield.symbol(x, y) == '0') {
+                        target.value = "";
+                    } else {
+                        target.value = minefield.symbol(x, y);
+                        switch (minefield.symbol(x, y)) {
+                            case '1': target.style.color = "blue"; break;
+                            case '2': target.style.color = "green"; break;
+                            case '3': target.style.color = "red"; break;
+                            case '4': target.style.color = "navy"; break;
+                            case '5': target.style.color = "maroon"; break;
+                            case '6': target.style.color = "lightseagreen"; break;
+                            case '7': target.style.color = "black"; break;
+                            case '8': target.style.color = "gray"; break;
+                        }
+                    }
+                    target.style.border = "none";
+                    target.style.backgroundColor = "#eeeeee";
+                    target.disabled = 'disabled';
+                }
+            }
+        }
+
+        function defeat() {
+            unveil_all();
+            game_output.innerHTML = " DEFEAT!";
+            game_output.style.color = "red";
+            clearInterval(increment);
+        }
+
+        function victory() {
+            unveil_all();
+            game_output.innerHTML = " VICTORY!"
+            game_output.style.color = "green";
+            mine_counter.innerHTML = "0";
+            clearInterval(increment);
+        }
+
+        function incrementSeconds() {
+            seconds += 1;
+            timer.innerText = seconds;
+        }
+
+    </script>
+</html>
