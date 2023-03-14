@@ -1,0 +1,91 @@
+<html>
+    <head>
+        <title>Boxes</title>
+        <style>
+            .box {
+                position: relative;
+                display: inline-block;
+                vertical-align: top;
+                width: 100px;
+                height: 100px;
+                border: 2px solid red;
+                justify-content: center;
+                align-items: center;
+                margin: 5px;
+            }
+            .item {
+                width: 90%;
+                height: 90%;
+                background-color: seagreen;
+                margin-left: 5%;
+                margin-top: 5%;
+                text-align: center;
+                font-size: 50px;
+                color: yellow;
+                user-select: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="box1" class="box" ondragover="itemDragOver(event)" ondrop="itemDrop(event)"></div>      
+        <div id="box2" class="box" ondragover="itemDragOver(event)" ondrop="itemDrop(event)"></div>
+        <div id="box3" class="box" ondragover="itemDragOver(event)" ondrop="itemDrop(event)"></div>
+        <br>
+        <div id="box4" class="box" ondragover="itemDragOver(event)" ondrop="itemDrop(event)"></div>
+        <div id="box5" class="box" ondragover="itemDragOver(event)" ondrop="itemDrop(event)"></div>
+        <div id="box6" class="box" ondragover="itemDragOver(event)" ondrop="itemDrop(event)"></div>
+        <br>
+        <div id="box7" class="box" ondragover="itemDragOver(event)" ondrop="itemDrop(event)"></div>
+        <div id="box8" class="box" ondragover="itemDragOver(event)" ondrop="itemDrop(event)"></div>
+        <div id="box9" class="box" ondragover="itemDragOver(event)" ondrop="itemDrop(event)"></div>
+    </body>
+
+    <script>
+        var symbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', ' '];
+        var ordered_blocks = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', ' '];
+        var blocks = new Array(9);
+        var empty;
+        for (var i = 1; i <= 9; i++) {
+            var index = parseInt(Math.random() * symbols.length, 10);
+            if (symbols[index] != ' ') {
+                var box = document.getElementById("box" + i);
+                box.innerHTML += `<div id="item` + i + 
+                `" class="item" draggable="true" ondragstart="itemDragStart(event)">` +
+                symbols[index] + `</div>`;
+            } else empty = "box" + i;
+            blocks[i-1] = symbols[index];
+            symbols.splice(index, 1);
+        }
+
+        function itemDragStart(event) {
+            console.log("Dragging", event.target.id);
+            event.dataTransfer.setData("id", event.target.id);
+            event.dataTransfer.setData("src", event.target.parentNode.id);
+        }
+
+        function itemDragOver(event) {
+            var targetBox = event.target;
+            console.log("drag over", targetBox.id);
+            event.preventDefault();
+        }
+
+        function itemDrop(event) {
+            console.log("dropped");
+            var targetBox = event.target;
+            if (targetBox.id == empty) {
+                var draggedId = event.dataTransfer.getData("id");
+                var draggedItem = document.getElementById(draggedId);
+                targetBox.appendChild(draggedItem);
+                var sourceBox = event.dataTransfer.getData("src");
+                empty = sourceBox;
+                blocks[parseInt(targetBox.id.charAt(3))-1] = blocks[parseInt(sourceBox.charAt(3))-1];
+                blocks[parseInt(sourceBox.charAt(3))-1] = ' ';
+            }
+            event.preventDefault();
+            for (var i = 0; i < 9; i++)
+                if (blocks[i] != ordered_blocks[i]) return;
+            setTimeout(function() { alert('You Win!'); }, 1);
+        }
+    </script>
+</html>
